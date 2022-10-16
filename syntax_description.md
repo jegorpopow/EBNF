@@ -109,7 +109,7 @@ names:
 
 ```yaml
 rules:
-  <S> := { <L> S $right } [S] | EPS;
+  <S> := { <L> <S> $right } [<S>] | EPS;
   <L> := "(";
 ```
 
@@ -134,7 +134,7 @@ names:
   $l := "(";
   $r := ")";
 rules: 
-  <S> := $l <S> $r S | EPS;   
+  <S> := $l <S> $r <S> | EPS;   
 ```
 
 ```yaml 
