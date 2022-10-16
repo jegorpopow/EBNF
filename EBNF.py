@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypeVar, List, Set, Union, Any
+from typing import TypeVar, List, Set, Union, Any, Dict
 from functools import reduce
 
 
