@@ -56,7 +56,7 @@ Expression = Union[Eps, Terminal, Name, Optional, KleeneStar, Seq, Alt]
 
 
 
-def show(expr: expr) -> str:
+def show(expr: Expression) -> str:
     if isinstance(expr, Eps):
         return "EPS"
     elif isinstance(expr, Terminal):
@@ -78,9 +78,9 @@ def show(expr: expr) -> str:
 
 
 def make_seq(lhs : Expression, rhs : Expression) -> Seq:
-    if isinstance(lhs, Cons):
-        return Cons(lhs.vals + [rhs])
-    return Cons([lhs, rhs])
+    if isinstance(lhs, Seq):
+        return Seq(lhs.vals + [rhs])
+    return Seq([lhs, rhs])
 
 def make_alt(lhs : Expression, rhs : Expression) -> Alt:
     if isinstance(lhs, Alt):
