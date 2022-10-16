@@ -38,22 +38,18 @@ class Optional:
 class KleeneStar:
     value : TExpression
 
-SeqElement = Union[Eps, Terminal, Name, Optional, KleeneStar] 
+SeqElement = Union[Eps, NonTerminal, Terminal, Name, Optional, KleeneStar] 
 
 @dataclass
 class Seq:
-    vals : List[SeqElement]
+    vals : List[TExpression]
 
-AltElement = Union[SeqElement, Seq]
-    
 @dataclass
 class Alt:
-    vals : List[AltElement]
+    vals : List[TExpression]
 
 
-Expression = Union[Eps, Terminal, Name, Optional, KleeneStar, Seq, Alt]
-
-
+Expression = Union[Eps, NonTerminal, Terminal, Name, Optional, KleeneStar, Seq, Alt]
 
 
 def show(expr: Expression) -> str:
@@ -127,7 +123,7 @@ class NameBinding:
 
 
 def collect_macros(bindings : List[NameBinding]) -> Dict[str, Terminal]:
-    return {binding.defined : binding.definition for binding in bindings}
+    return {binding.defined.value : binding.definition for binding in bindings}
     
 
 # EBNF class
@@ -157,7 +153,8 @@ def make_grammar(start: NonTerminal, rules : List[Rule], bindings : List[NameBin
 
 def show_grammar(grammar : EBNF) -> str:
     nl = "\n"
-    bindings = "".join(map(lambda binding: f"  {show(binding.defined)} := {show(binding.definition)}{nl}" , grammar.name_bindings))
+    bindings = "".join([f" ${name} := {show(grammar.name_bindings[name])}{nl}" for name in grammar.name_bindings])
+   # bindings = "".join(map(lambda binding: f"  ${binding} := {show(grammar.name_bindings[binding]}{nl}" , grammar.name_bindings))
     rules = "".join(map(lambda rule: f"  {show(rule.defined)} := {show(rule.definition)}{nl}" , grammar.rules))
     return f"start:{nl}  {show(grammar.start)}{nl}names:{nl}{bindings}rules:{nl}{rules}"
 
