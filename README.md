@@ -1,2 +1,2 @@
 # EBNF
-Project for formal language course @ HSE SPb
+Project for formal languages course @ HSE SPb
