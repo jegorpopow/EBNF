@@ -18,6 +18,7 @@ tokens = (
         "BIND",
         "ALT_SEP",
         "BIND_END",
+        "BIND_BEGIN",
     ]
     + ["L" + name for name in ["KLEENE", "OPT", "GROUP"]]
     + ["R" + name for name in ["KLEENE", "OPT", "GROUP"]]
@@ -36,8 +37,9 @@ t_RGROUP = RGROUP_REGEX
 t_BIND = BIND_REGEX
 t_BIND_END = BIND_END_REGEX
 t_ALT_SEP = ALT_SEP_REGEX
+t_BIND_BEGIN = r"[ ][ ]"
 
-t_ignore = " \t"
+t_ignore = ""
 
 
 def t_newline(token):
