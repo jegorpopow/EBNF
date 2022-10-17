@@ -1,5 +1,5 @@
 def fill_regex_pattern(start: str, sym: str):
-    return fr"{start}[^\{sym}\\]+((\\{sym}|\\\\)?[^\{sym}\\]*)*{sym}"
+    return fr"{start}.+?(?<!(?<!\\)\\){sym}"
 
 
 NON_TERMINAL_REGEX = fill_regex_pattern("<", ">")
