@@ -1,0 +1,5 @@
+*.out
+parsetab.py
+*__pycache__
+*.log
+.vscode
