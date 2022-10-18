@@ -1,0 +1,7 @@
+start: 
+  <S>; 
+names:
+  $l := "(";
+  $r := ")";
+rules: 
+  <S> := $l <S> $r <S> | EPS;
