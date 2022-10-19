@@ -1,6 +1,10 @@
+import string
+
 from EBNF import *
 import sys
 import ebnf_parser
+import argparse
+from random import choice
 
 
 class Converter:
@@ -8,30 +12,38 @@ class Converter:
     non_terminals: Set[str]
     rules: List[Rule]
     start: NonTerminal
+    readable : bool
 
-    def __init__(self, grammar: EBNF):
+    def __init__(self, grammar: EBNF, readable : bool):
         self.names = grammar.name_bindings
         self.non_terminals = grammar.non_terminals
         self.rules = grammar.rules
         self.start = grammar.start
+        self.readable = readable
 
     def compose_nt_name(self, expr: Expression) -> str:
-        if isinstance(expr, Terminal) or isinstance(expr, NonTerminal) or isinstance(expr, Name):
-            res = expr.value
-        elif isinstance(expr, Eps):
-            res = "eps"
-        elif isinstance(expr, Optional):
-            res = "opt" + self.compose_nt_name(expr.value)
-        elif isinstance(expr, KleeneStar):
-            res = "star" + self.compose_nt_name(expr.value)
-        elif isinstance(expr, Alt):
-            res = "(" + "|".join([self.compose_nt_name(e) for e in expr.vals]) + ")"
-        elif isinstance(expr, Seq):
-            res = "(" + ",".join(self.compose_nt_name(e) for e in expr.vals) + ")"
+        if not self.readable:
+            if isinstance(expr, Terminal) or isinstance(expr, NonTerminal) or isinstance(expr, Name):
+                res = expr.value
+            elif isinstance(expr, Eps):
+                res = "eps"
+            elif isinstance(expr, Optional):
+                res = "opt" + self.compose_nt_name(expr.value)
+            elif isinstance(expr, KleeneStar):
+                res = "star" + self.compose_nt_name(expr.value)
+            elif isinstance(expr, Alt):
+                res = "(" + " or ".join([self.compose_nt_name(e) for e in expr.vals]) + ")"
+            elif isinstance(expr, Seq):
+                res = "(" + ",".join(self.compose_nt_name(e) for e in expr.vals) + ")"
+            else:
+                raise RuntimeError("Can't match expression type during name composition")
+            while res in self.non_terminals:
+                res += "'"
         else:
-            raise RuntimeError("Can't match expression type during name composition")
-        while res in self.non_terminals:
-            res += "'"
+            res = choice(string.ascii_uppercase)
+            while res in self.non_terminals:
+                res += choice(string.ascii_uppercase)
+            self.non_terminals.add(res)
         return res
 
     def convert_expr(self, expr: Expression) -> (Expression, List[Rule]):
@@ -74,19 +86,19 @@ class Converter:
 
 
 def main():
-    if len(sys.argv) > 1:
-        input_file = sys.argv[1]
-        if len(sys.argv) > 2:
-            output_file = sys.argv[2]
-        else:
-            output_file = input_file + ".out"
-
-        with open(input_file, "r") as grammar_definition, open(output_file, "w") as processed_grammar:
-            file = grammar_definition.readlines()
-            ebnf_parser.parser.parse("".join(file))
-            ebnf = make_grammar(ebnf_parser.Start, ebnf_parser.Rules, ebnf_parser.Bindings)
-            cfg = Converter(ebnf).convert()
-            print(show_grammar(cfg), file=processed_grammar)
+    p = argparse.ArgumentParser("Converts CF formal grammar from EBNF to classic form")
+    p.add_argument("-r", '--readable', dest='readable', action="store_true")
+    p.add_argument('input', nargs=1, type=str)
+    p.add_argument('output', nargs='?')
+    args = p.parse_args()
+    if not args.output:
+        args.output = args.input[0] + ".out"
+    with open(args.input[0], "r") as grammar_definition, open(args.output, "w") as processed_grammar:
+        file = grammar_definition.readlines()
+        ebnf_parser.parser.parse("".join(file))
+        ebnf = make_grammar(ebnf_parser.Start, ebnf_parser.Rules, ebnf_parser.Bindings)
+        cfg = Converter(ebnf, args.readable).convert()
+        print(show_grammar(cfg), file=processed_grammar)
 
 
 if __name__ == "__main__":
