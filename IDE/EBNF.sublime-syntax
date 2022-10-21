@@ -1,0 +1,39 @@
+%YAML 1.2
+---
+# See http://www.sublimetext.com/docs/syntax.html
+file_extensions: ebnf
+scope: source.EBNF
+contexts:
+  main:
+    - match: '"'
+      scope: punctuation.definition.string.begin.example-c
+      push: double_quoted_string
+
+    - match: '//'
+      scope: punctuation.definition.comment
+      push: line_comment
+
+    - match: '(start|names|rules)'
+      scope: keyword.control
+
+    - match: '<\S*>'
+      scope: variable.function
+
+    - match: '\$(\S*)'
+      scope: variable.parameter
+
+    - match: '\bEPS\b'
+      scope: constant.character
+
+  double_quoted_string:
+    - meta_scope: string.quoted.double
+    - match: '\\.'
+      scope: constant.character.escape
+    - match: '"'
+      scope: punctuation.definition.string.end
+      pop: true
+
+  line_comment:
+    - meta_scope: comment.line
+    - match: $
+      pop: true
