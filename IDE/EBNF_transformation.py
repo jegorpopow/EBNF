@@ -25,9 +25,9 @@ class TransformCommand(sublime_plugin.TextCommand):
         }
         count = 0
         for i, c in enumerate(string):
-            if (count == 0) and (c in '([{'):
+            if (count == 0) and (c in '<([{'):
                 stack.append(c)
-            if (count == 0) and (c in ')]}'):
+            if (count == 0) and (c in ')]}>'):
                 if (len(stack) == 0) or (stack[-1] != match[c]):
                     return string
                 if stack[-1] == match[c]:
@@ -36,7 +36,7 @@ class TransformCommand(sublime_plugin.TextCommand):
                 if (i == 0) or (string[i - 1] != '\\'):
                     count += 1
                     count %= 2
-            if (c == char) and (count == 0) and (len(stack) == 0):
+            if (c in char) and (count == 0) and (len(stack) == 0):
                 res.append(string[last:i])
                 last = i + 1
         res.append(string[last:])
@@ -76,7 +76,7 @@ class TransformCommand(sublime_plugin.TextCommand):
         res = ''
         if re.match("\s*\|", expr):
             res = ' | '
-        symbols_pre = [[s1 for s1 in re.split('\s+', s) if s1 != ''] for s in self.split(expr, '|')]
+        symbols_pre = [[s1 for s1 in self.split(s, ' \t') if s1 != ''] for s in self.split(expr, '|')]
         symbols = [list(i) for i in set(tuple(i) for i in symbols_pre)]
         start_symbol_dict = {}
         start_symbol_compressed = {}
@@ -128,7 +128,7 @@ class TransformCommand(sublime_plugin.TextCommand):
 
     def transform_expr(self, expr):
         brackets = []
-        res = ''
+        res = []
         count = 0
         for i, c in enumerate(expr):
             if c == '"':
@@ -136,17 +136,22 @@ class TransformCommand(sublime_plugin.TextCommand):
                     count += 1
                     count %= 2
             if (count == 0) and (c in '([{}])'):
-                if len(brackets) == 0:
-                    res += self.transform_without_brackets(expr[0 : i]) + c
+                if c in '}])':
+                    res.append((self.transform_without_brackets(expr[brackets[-1] + 1: i]), expr[brackets[-1] + 1: i]))
+                    brackets.pop()
                 else:
-                    res += self.transform_without_brackets(expr[brackets[-1] + 1: i]) + c
-                brackets.append(i)
+                    brackets.append(i)
+
         if len(brackets) == 0:
             a = 0
         else:
             a = brackets[-1] + 1
-        res += self.transform_without_brackets(expr[a:])
-        return res
+        res.append((self.transform_without_brackets(expr[a:]), expr[a:]))
+
+        ans = expr
+        for s, s1 in res[::-1]:
+            ans = ans.replace(s1, s)
+        return ans
 
     def transform_line(self, line):
         splitted = re.split("(\s*<\S*>\s*:=\s*)", line)
@@ -154,7 +159,7 @@ class TransformCommand(sublime_plugin.TextCommand):
             return line
         else:
             old = splitted[-1]
-            res = self.transform_expr(splitted[-1])
+            res = self.remove_brackets(self.transform_expr(splitted[-1]))
             while res != old:
                 old = res
                 res = self.remove_brackets(self.transform_expr(res))
@@ -164,5 +169,15 @@ class TransformCommand(sublime_plugin.TextCommand):
         lines = text.split('\n')
         res = []
         for line in lines:
-            res.append(self.transform_line(line))
+            ind = -1
+            for i in range(len(line) - 1, -1, -1):
+                if line[i] == ';':
+                    ind = i
+                    break
+            if ind != -1:
+                end = line[i:]
+                line = line[:i]
+            else:
+                end = ''
+            res.append(self.transform_line(line) + end)
         return '\n'.join(res)

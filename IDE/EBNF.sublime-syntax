@@ -13,13 +13,13 @@ contexts:
       scope: punctuation.definition.comment
       push: line_comment
 
-    - match: '(start|names|rules)'
+    - match: '\b(start|names|rules)\b'
       scope: keyword.control
 
-    - match: '<\S*>'
+    - match: '<(([^\\]*?)|\\.)*?>'
       scope: variable.function
 
-    - match: '\$(\S*)'
+    - match: '\$([A-Za-z_`]+)'
       scope: variable.parameter
 
     - match: '\bEPS\b'
