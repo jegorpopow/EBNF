@@ -200,8 +200,10 @@ def p_error(p):
 
 
 def parse_ebnf(input_file: str, debug_output: str = "parser_debug.out") -> Union[EBNF, None]:
-    global parser
+    global parser, output_file_opened
     parser = yacc.yacc(debugfile=debug_output)
+    output_file_opened = open(debug_output, "w")
+
 
     with open(input_file, "r") as grammar_definition:
         file = grammar_definition.readlines()
@@ -223,7 +225,6 @@ def main():
         else:
             output_file = input_file + ".out"
 
-        output_file_opened = open(output_file, "w")
         ebnf = parse_ebnf(input_file, output_file)
 
         if ebnf is None:
