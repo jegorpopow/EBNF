@@ -105,9 +105,7 @@ def main():
         do_lex(input_file, output_file)
 
     else:
-        print(
-            "Incorrect usage. Please, specify input file in first argument, e.g: 'lex.py input_file.txt'"
-        )
+        print("Expected at least one argument: input file containing grammar")
 
 
 if __name__ == "__main__":
