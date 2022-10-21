@@ -8,7 +8,8 @@ logging.basicConfig(
     filename="lex.log", level=logging.WARNING, filemode="w"
 )
 
-reserved = {"start:": "START", "rules:": "RULES", "names:": "NAMES", "EPS": "EPSILON"}
+reserved = {"start:": "START", "rules:": "RULES",
+            "names:": "NAMES", "EPS": "EPSILON"}
 
 tokens = (
     [
@@ -18,7 +19,6 @@ tokens = (
         "BIND",
         "ALT_SEP",
         "BIND_END",
-        "BIND_BEGIN",
     ]
     + ["L" + name for name in ["KLEENE", "OPT", "GROUP"]]
     + ["R" + name for name in ["KLEENE", "OPT", "GROUP"]]
@@ -37,9 +37,8 @@ t_RGROUP = RGROUP_REGEX
 t_BIND = BIND_REGEX
 t_BIND_END = BIND_END_REGEX
 t_ALT_SEP = ALT_SEP_REGEX
-t_BIND_BEGIN = r"[ ][ ]"
 
-t_ignore = ""
+t_ignore = r" "
 
 
 def t_newline(token):
@@ -83,6 +82,19 @@ def t_KEYWORD(token):
 lexer = lex.lex()
 
 
+def do_lex(input_file: str, output_file: str):
+    with open(input_file, "r") as grammar_definition, open(
+        output_file, "w"
+    ) as processed_grammar:
+        lexer.input("".join(grammar_definition.readlines()))
+
+        while True:
+            tok = lexer.token()
+            if not tok:
+                break
+            print(tok, file=processed_grammar)
+
+
 def main():
     if len(sys.argv) > 1:
         input_file = sys.argv[1]
@@ -90,17 +102,7 @@ def main():
             output_file = sys.argv[2]
         else:
             output_file = input_file + ".out"
-
-        with open(input_file, "r") as grammar_definition, open(
-            output_file, "w"
-        ) as processed_grammar:
-            lexer.input("".join(grammar_definition.readlines()))
-
-            while True:
-                tok = lexer.token()
-                if not tok:
-                    break
-                print(tok, file=processed_grammar)
+        do_lex(input_file, output_file)
 
     else:
         print(
