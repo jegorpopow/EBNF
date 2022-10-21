@@ -36,7 +36,7 @@ class Converter:
             elif isinstance(expr, Seq):
                 res = "(" + " ".join(self.compose_nt_name(e) for e in expr.vals) + ")"
             else:
-                raise RuntimeError("Can't match expression type during name composition")
+                raise ValueError("Can't match expression type during name composition")
             while res in self.non_terminals:
                 res += "'"
         else:
@@ -73,7 +73,7 @@ class Converter:
             converted, new_rules = reduce(lambda a, b: (make_seq(a[0], b[0]), a[1] + b[1]),
                                           converted_seq)
         else:
-            raise RuntimeError("Can't match expression type during conversion")
+            raise ValueError("Can't match expression type during conversion")
         return converted, new_rules
 
     def remove_nested_seqs(self, expr: Expression) -> List[Expression]:
@@ -156,9 +156,14 @@ def main():
     with open(args.input[0], "r") as grammar_definition, open(args.output, "w") as processed_grammar:
         file = grammar_definition.readlines()
         ebnf_parser.parser.parse("".join(file))
-        ebnf = make_grammar(ebnf_parser.Start, ebnf_parser.Rules, ebnf_parser.Bindings)
-        cfg = Converter(ebnf, args.readable).convert()
-        print(show_grammar(cfg), file=processed_grammar)
+        try:
+            ebnf = make_grammar(ebnf_parser.Start, ebnf_parser.Rules, ebnf_parser.Bindings)
+            cfg = Converter(ebnf, args.readable).convert()
+            print(show_grammar(cfg), file=processed_grammar)
+        except TypeError:
+            print('Error: grammar is invalid')
+        except ValueError as e:
+            print(f'Error: {e}')
 
 
 if __name__ == "__main__":
