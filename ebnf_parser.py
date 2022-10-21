@@ -199,7 +199,10 @@ def p_error(p):
     print(f"Syntax error: Unexpected {token}", file=output_file_opened)
 
 
-def parse_ebnf(input_file: str) -> Union[EBNF, None]:
+def parse_ebnf(input_file: str, debug_output: str = "parser_debug.out") -> Union[EBNF, None]:
+    global parser
+    parser = yacc.yacc(debugfile=debug_output)
+
     with open(input_file, "r") as grammar_definition:
         file = grammar_definition.readlines()
         parser.parse("".join(file))
@@ -221,8 +224,7 @@ def main():
             output_file = input_file + ".out"
 
         output_file_opened = open(output_file, "w")
-        parser = yacc.yacc(debugfile=output_file)
-        ebnf = parse_ebnf(input_file)
+        ebnf = parse_ebnf(input_file, output_file)
 
         if ebnf is None:
             print("Grammar is incorrect, cannot parse",
