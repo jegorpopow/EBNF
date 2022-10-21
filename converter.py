@@ -153,12 +153,14 @@ def main():
     args = p.parse_args()
     if not args.output:
         args.output = args.input[0] + ".out"
-    with open(args.input[0], "r") as grammar_definition, open(args.output, "w") as processed_grammar:
-        file = grammar_definition.readlines()
-        ebnf_parser.parser.parse("".join(file))
-        ebnf = make_grammar(ebnf_parser.Start, ebnf_parser.Rules, ebnf_parser.Bindings)
-        cfg = Converter(ebnf, args.readable).convert()
-        print(show_grammar(cfg), file=processed_grammar)
+    ebnf = ebnf_parser.parse_ebnf(args.input[0])
+    with open(args.output, "w") as processed_grammar:
+        if ebnf is None:
+            print("Grammar is incorrect, cannot parse",
+                  file=processed_grammar)
+        else:
+            cfg = Converter(ebnf, args.readable).convert()
+            print(show_grammar(cfg), file=processed_grammar)
 
 
 if __name__ == "__main__":
