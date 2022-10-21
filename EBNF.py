@@ -153,10 +153,10 @@ def make_grammar(start: NonTerminal, rules : List[Rule], bindings : List[NameBin
 
 def show_grammar(grammar : EBNF) -> str:
     nl = "\n"
-    bindings = "".join([f" ${name} := {show(grammar.name_bindings[name])}{nl}" for name in grammar.name_bindings])
+    bindings = "".join([f" ${name} := {show(grammar.name_bindings[name])};{nl}" for name in grammar.name_bindings])
    # bindings = "".join(map(lambda binding: f"  ${binding} := {show(grammar.name_bindings[binding]}{nl}" , grammar.name_bindings))
-    rules = "".join(map(lambda rule: f"  {show(rule.defined)} := {show(rule.definition)}{nl}" , grammar.rules))
-    return f"start:{nl}  {show(grammar.start)}{nl}names:{nl}{bindings}rules:{nl}{rules}"
+    rules = "".join(map(lambda rule: f"  {show(rule.defined)} := {show(rule.definition)};{nl}" , grammar.rules))
+    return f"start:{nl}  {show(grammar.start)};{nl}names:{nl}{bindings}rules:{nl}{rules}"
 
 def main():
    rule1 = Rule(NonTerminal("ABOBA"), Alt([Seq([KleeneStar(Terminal("a")), Optional(Name("bbb"))]), NonTerminal("c")]))
