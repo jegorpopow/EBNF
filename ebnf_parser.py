@@ -57,6 +57,7 @@ def p_rest(p):
           | RULES rls
     """
     global Bindings, Rules
+
     if len(p) == 3:
         Rules = p[2]
         p[0] = p[2]
@@ -68,10 +69,11 @@ def p_rest(p):
 
 def p_start(p):
     """
-    start : BIND_BEGIN NON_TERMINAL BIND_END
+    start : NON_TERMINAL BIND_END
     """
     global Start
-    Start = NonTerminal(p[2])
+
+    Start = NonTerminal(p[1])
 
 
 def p_defs(p):
@@ -88,9 +90,9 @@ def p_defs(p):
 
 def p_def(p):
     """
-    def   : BIND_BEGIN NAME BIND TERMINAL BIND_END
+    def   : NAME BIND TERMINAL BIND_END
     """
-    p[0] = NameBinding(Name(p[2]), Terminal(p[4]))
+    p[0] = NameBinding(Name(p[1]), Terminal(p[3]))
 
 
 def p_rls(p):
@@ -107,9 +109,9 @@ def p_rls(p):
 
 def p_rule(p):
     """
-    rule  : BIND_BEGIN NON_TERMINAL BIND expr BIND_END
+    rule  : NON_TERMINAL BIND expr BIND_END
     """
-    p[0] = Rule(NonTerminal(p[2]), p[4])
+    p[0] = Rule(NonTerminal(p[1]), p[3])
 
 
 def p_expr(p):
@@ -183,7 +185,8 @@ def p_term_o(p):
     p[0] = Optional(p[2])
 
 
-parser = yacc.yacc()
+global parser
+global output_file_opened
 
 
 def p_error(p):
@@ -193,10 +196,28 @@ def p_error(p):
     else:
         token = f"{p.type}({p.value}) on line {p.lineno}"
 
-    print(f"Syntax error: Unexpected {token}")
+    print(f"Syntax error: Unexpected {token}", file=output_file_opened)
+
+
+def parse_ebnf(input_file: str, debug_output: str = "parser_debug.out") -> Union[EBNF, None]:
+    global parser, output_file_opened
+    parser = yacc.yacc(debugfile=debug_output)
+    output_file_opened = open(debug_output, "w")
+
+
+    with open(input_file, "r") as grammar_definition:
+        file = grammar_definition.readlines()
+        parser.parse("".join(file))
+        try:
+            ebnf = make_grammar(Start, Rules, Bindings)
+            return ebnf
+        except TypeError or ValueError:
+            return None
 
 
 def main():
+    global parser, output_file_opened
+
     if len(sys.argv) > 1:
         input_file = sys.argv[1]
         if len(sys.argv) > 2:
@@ -204,11 +225,17 @@ def main():
         else:
             output_file = input_file + ".out"
 
-        with open(input_file, "r") as grammar_definition, open(output_file, "w") as processed_grammar:
-            file = grammar_definition.readlines()
-            parser.parse("".join(file))
-            ebnf = make_grammar(Start, Rules, Bindings)
-            print(show_grammar(ebnf), file=processed_grammar)
+        ebnf = parse_ebnf(input_file, output_file)
+
+        if ebnf is None:
+            print("Grammar is incorrect, cannot parse",
+                  file=output_file_opened)
+        else:
+            print(show_grammar(ebnf), file=output_file_opened)
+
+        output_file_opened.close()
+    else:
+        print("Expected at least one argument: input file containing grammar")
 
 
 if __name__ == "__main__":
